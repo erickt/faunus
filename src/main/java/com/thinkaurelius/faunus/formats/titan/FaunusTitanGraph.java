@@ -30,7 +30,7 @@ public class FaunusTitanGraph extends StandardTitanGraph {
         super(new GraphDatabaseConfiguration(configuration));
 
         //Used to be TranscationConfig(this.getConfiguration, false) indicating that this is not threadBound
-        //which is the defaul for Transaction
+        //which is the default for Transaction
         this.tx = (autoTx) ? newTransaction(new StandardTransactionBuilder(this.getConfiguration(), this)) : null;
     }
 

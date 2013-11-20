@@ -8,7 +8,7 @@
     </parent>
     <groupId>com.thinkaurelius.faunus</groupId>
     <artifactId>faunus</artifactId>
-    <version>0.4.0</version>
+    <version>0.4.0-Lab41</version>
     <packaging>jar</packaging>
     <url>http://thinkaurelius.github.com/faunus/</url>
     <name>Faunus: Graph Analytics Engine</name>
@@ -18,6 +18,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sesame.version>2.6.10</sesame.version>
         <tinkerpop.version>2.4.0</tinkerpop.version>
+        <hadoop.version>2.0.0-cdh4.4.0</hadoop.version>
+        <hbase.version>0.94.6-cdh4.4.0</hbase.version>
         <titan.version>0.4.0</titan.version>
         <slf4j.version>1.7.5</slf4j.version>
     </properties>
@@ -90,8 +92,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-            <version>1.2.1</version>
+            <artifactId>hadoop-client</artifactId>
+            <version>${hadoop.version}</version>
             <scope>provided</scope>
         </dependency>
         <!-- TITAN -->
@@ -109,6 +111,22 @@
             <groupId>com.thinkaurelius.titan</groupId>
             <artifactId>titan-hbase</artifactId>
             <version>${titan.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId> org.apache.hbase</groupId>
+                    <artifactId>hbase</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId> org.apache.hadoop</groupId>
+                    <artifactId>hadoop-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Adding HBase as a direct dependency -->
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase</artifactId>
+            <version>${hbase.version}</version>
         </dependency>
         <!-- RDF PARSING -->
         <dependency>
@@ -157,12 +175,17 @@
         <dependency>
             <groupId>org.apache.mrunit</groupId>
             <artifactId>mrunit</artifactId>
-            <version>0.9.0-incubating</version>
-            <classifier>hadoop1</classifier>
+            <version>1.0.0</version>
+            <classifier>hadoop2</classifier>
             <scope>test</scope>
         </dependency>
     </dependencies>
     <repositories>
+        <repository>
+            <id>cloudera</id>
+            <name>Cloudera repository</name>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+        </repository>
         <repository>
             <id>aduna-repo</id>
             <name>Aduna repository</name>
