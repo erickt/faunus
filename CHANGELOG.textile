@@ -5,6 +5,20 @@ Faunus: Graph Analytics Engine
 
 h2. Faunus 0.x.y
 
+h3. Version 0.4.1 (Nov 24, 2013)
+
+```xml
+<dependency>
+  <groupId>com.thinkaurelius.faunus</groupId>
+  <artifactId>faunus</artifactId>
+  <version>0.4.1</version>
+</dependency>
+```
+
+* Fixed a severe bug in @Configuration@ entry orderings and @MapSequence@
+* Changed default Cassandra partitioner from Random to Murmur3
+* Broke @BlueprintsGraphOutputMapReduce@ into a MapReduce and then a Map (speeds up edge loading)
+
 h3. Version 0.4.0 (Oct 16, 2013)
 
 ```xml

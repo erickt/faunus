@@ -23,309 +23,313 @@ import org.apache.hadoop.security.Credentials;
 
 /**
  * MemoryMapper supports in-memory mapping for a chain of consecutive mappers.
- * This provides significant performance improvements as each map need not write
- * its results to disk. Note that MemoryMapper is not general-purpose and is
- * specific to Faunus' current MapReduce library. In particular, it assumes that
- * the chain of mappers emits 0 or 1 key/value pairs for each input.
+ * This provides significant performance improvements as each map need not write its results to disk.
+ * Note that MemoryMapper is not general-purpose and is specific to Faunus' current MapReduce library.
+ * In particular, it assumes that the chain of mappers emits 0 or 1 key/value pairs for each input.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class MemoryMapper<A, B, C, D> extends Mapper<A, B, C, D> {
 
-	public class MemoryMapContext extends Mapper.Context {
+    public class MemoryMapContext extends Mapper.Context {
 
-		private MapContextImpl<A,B,C,D> mapContextImpl;
-		
-		private static final String DASH = "-";
-		private static final String EMPTY = "";
-		private final Configuration currentConfiguration = new Configuration();
-		private Writable key = null;
-		private Writable value = null;
-		private Writable tempKey = null;
-		private Writable tempValue = null;
-		private Mapper.Context context;
-		private Configuration globalConfiguration;
+        private MapContextImpl<A,B,C,D> mapContextImpl;
+        
+        private static final String DASH = "-";
+        private static final String EMPTY = "";
 
-		public MemoryMapContext(final Mapper.Context context) throws IOException, InterruptedException {
-			
-			mapContextImpl = new MapContextImpl<A, B, C, D>(context.getConfiguration(), context.getTaskAttemptID() == null ? new TaskAttemptID() : context.getTaskAttemptID(), null, null, context.getOutputCommitter(), null, context.getInputSplit());
-		
-			this.context = context;
-			this.globalConfiguration = context.getConfiguration();
-		}
+        private final Configuration currentConfiguration = new Configuration();
 
-		@Override
-		public void write(final Object key, final Object value) throws IOException, InterruptedException {
-			this.key = (Writable) key;
-			this.value = (Writable) value;
-		}
+        private Writable key = null;
+        private Writable value = null;
+        private Writable tempKey = null;
+        private Writable tempValue = null;
+        private Mapper.Context context;
+        private Configuration globalConfiguration;
 
-		@Override
-		public Writable getCurrentKey() {
-			this.tempKey = this.key;
-			this.key = null;
-			return this.tempKey;
-		}
+        public MemoryMapContext(final Mapper.Context context) throws IOException, InterruptedException {
+            mapContextImpl = new MapContextImpl<A, B, C, D>(context.getConfiguration(), context.getTaskAttemptID() == null ? new TaskAttemptID() : context.getTaskAttemptID(), null, null, context.getOutputCommitter(), null, context.getInputSplit());
+        
+            this.context = context;
+            this.globalConfiguration = context.getConfiguration();
+        }
 
-		@Override
-		public Writable getCurrentValue() {
-			this.tempValue = this.value;
-			this.value = null;
-			return tempValue;
-		}
+        @Override
+        public void write(final Object key, final Object value) throws IOException, InterruptedException {
+            this.key = (Writable) key;
+            this.value = (Writable) value;
+        }
 
-		@Override
-		public boolean nextKeyValue() {
-			return this.key != null && this.value != null;
-		}
+        @Override
+        public Writable getCurrentKey() {
+            this.tempKey = this.key;
+            this.key = null;
+            return this.tempKey;
+        }
 
-		@Override
-		public Counter getCounter(final String groupName, final String counterName) {
-			return this.context.getCounter(groupName, counterName);
-		}
+        @Override
+        public Writable getCurrentValue() {
+            this.tempValue = this.value;
+            this.value = null;
+            return tempValue;
+        }
 
-		@Override
-		public Counter getCounter(final Enum counterName) {
-			return this.context.getCounter(counterName);
-		}
+        @Override
+        public boolean nextKeyValue() {
+            return this.key != null && this.value != null;
+        }
 
-		@Override
-		public Configuration getConfiguration() {
-			return this.currentConfiguration;
-		}
+        @Override
+        public Counter getCounter(final String groupName, final String counterName) {
+            return this.context.getCounter(groupName, counterName);
+        }
 
-		public void setContext(final Mapper.Context context) {
-			this.context = context;
-		}
+        @Override
+        public Counter getCounter(final Enum counterName) {
+            return this.context.getCounter(counterName);
+        }
 
-		public void stageConfiguration(final int step) {
-			this.currentConfiguration.clear();
-			for (final Map.Entry<String, String> entry : this.globalConfiguration) {
-				final String key = entry.getKey();
-				if (key.endsWith(DASH + step)) {
-					this.currentConfiguration.set(key.replace(DASH + step, EMPTY), entry.getValue());
-				} else if (!key.matches(".*-[0-9]+")) {
-					this.currentConfiguration.set(key, entry.getValue());
-				}
-			}
-		}
+        @Override
+        public Configuration getConfiguration() {
+            return this.currentConfiguration;
+        }
 
-		@Override
-		public InputSplit getInputSplit() {
-			return mapContextImpl.getInputSplit();
-				
-		}
+        public void setContext(final Mapper.Context context) {
+            this.context = context;
+        }
 
-		@Override
-		public OutputCommitter getOutputCommitter() {
-			return mapContextImpl.getOutputCommitter();
-		}
+        public void stageConfiguration(final int step) {
+            this.currentConfiguration.clear();
+            for (final Map.Entry<String, String> entry : this.globalConfiguration) {
+                final String key = entry.getKey();
+                if (!key.matches(".*-[0-9]+")) {
+                    this.currentConfiguration.set(key, entry.getValue());
+                }
+            }
+            for (final Map.Entry<String, String> entry : this.globalConfiguration) {
+                final String key = entry.getKey();
+                if (key.endsWith(DASH + step)) {
+                    this.currentConfiguration.set(key.replace(DASH + step, EMPTY), entry.getValue());
+                }
+            }
+        }
 
-		@Override
-		public TaskAttemptID getTaskAttemptID() {
-			return mapContextImpl.getTaskAttemptID();
-		}
+        @Override
+        public InputSplit getInputSplit() {
+            return mapContextImpl.getInputSplit();
+                
+        }
 
-		@Override
-		public void setStatus(String msg) {
-			mapContextImpl.setStatus(msg);
-		}
+        @Override
+        public OutputCommitter getOutputCommitter() {
+            return mapContextImpl.getOutputCommitter();
+        }
 
-		@Override
-		public String getStatus() {
-			return mapContextImpl.getStatus();
-		}
+        @Override
+        public TaskAttemptID getTaskAttemptID() {
+            return mapContextImpl.getTaskAttemptID();
+        }
 
-		@Override
-		public float getProgress() {
-			return mapContextImpl.getProgress();
-		}
+        @Override
+        public void setStatus(String msg) {
+            mapContextImpl.setStatus(msg);
+        }
 
-		@Override
-		public Credentials getCredentials() {
-			return mapContextImpl.getCredentials();
-		}
+        @Override
+        public String getStatus() {
+            return mapContextImpl.getStatus();
+        }
 
-		@Override
-		public JobID getJobID() {
-			return mapContextImpl.getJobID();
-		}
+        @Override
+        public float getProgress() {
+            return mapContextImpl.getProgress();
+        }
 
-		@Override
-		public int getNumReduceTasks() {
-			return mapContextImpl.getNumReduceTasks();
-		}
+        @Override
+        public Credentials getCredentials() {
+            return mapContextImpl.getCredentials();
+        }
 
-		@Override
-		public Path getWorkingDirectory() throws IOException {
-			return mapContextImpl.getWorkingDirectory();
-		}
+        @Override
+        public JobID getJobID() {
+            return mapContextImpl.getJobID();
+        }
 
-		@Override
-		public Class<?> getOutputKeyClass() {
-			return mapContextImpl.getOutputKeyClass();
-		}
+        @Override
+        public int getNumReduceTasks() {
+            return mapContextImpl.getNumReduceTasks();
+        }
 
-		@Override
-		public Class<?> getOutputValueClass() {
-			return mapContextImpl.getOutputValueClass();
-		}
+        @Override
+        public Path getWorkingDirectory() throws IOException {
+            return mapContextImpl.getWorkingDirectory();
+        }
 
-		@Override
-		public Class<?> getMapOutputKeyClass() {
-			return mapContextImpl.getMapOutputKeyClass();
-		}
+        @Override
+        public Class<?> getOutputKeyClass() {
+            return mapContextImpl.getOutputKeyClass();
+        }
 
-		@Override
-		public Class<?> getMapOutputValueClass() {
-			return mapContextImpl.getMapOutputValueClass();
-		}
+        @Override
+        public Class<?> getOutputValueClass() {
+            return mapContextImpl.getOutputValueClass();
+        }
 
-		@Override
-		public String getJobName() {
-			return mapContextImpl.getJobName();
-		}
+        @Override
+        public Class<?> getMapOutputKeyClass() {
+            return mapContextImpl.getMapOutputKeyClass();
+        }
 
-		@Override
-		public boolean userClassesTakesPrecedence() {
-			return false;
-		}
+        @Override
+        public Class<?> getMapOutputValueClass() {
+            return mapContextImpl.getMapOutputValueClass();
+        }
 
-		@Override
-		public Class<? extends InputFormat<?, ?>> getInputFormatClass() throws ClassNotFoundException {
-			return mapContextImpl.getInputFormatClass();
-		}
+        @Override
+        public String getJobName() {
+            return mapContextImpl.getJobName();
+        }
 
-		@Override
-		public Class<? extends Mapper<?, ?, ?, ?>> getMapperClass() throws ClassNotFoundException {
-			return mapContextImpl.getMapperClass();
-		}
+        @Override
+        public boolean userClassesTakesPrecedence() {
+            return false;
+        }
 
-		@Override
-		public Class<? extends Reducer<?, ?, ?, ?>> getCombinerClass() throws ClassNotFoundException {
-			return mapContextImpl.getCombinerClass();
-		}
+        @Override
+        public Class<? extends InputFormat<?, ?>> getInputFormatClass() throws ClassNotFoundException {
+            return mapContextImpl.getInputFormatClass();
+        }
 
-		@Override
-		public Class<? extends Reducer<?, ?, ?, ?>> getReducerClass() throws ClassNotFoundException {
-			return mapContextImpl.getReducerClass();
-		}
+        @Override
+        public Class<? extends Mapper<?, ?, ?, ?>> getMapperClass() throws ClassNotFoundException {
+            return mapContextImpl.getMapperClass();
+        }
 
-		@Override
-		public Class<? extends OutputFormat<?, ?>> getOutputFormatClass() throws ClassNotFoundException {
-			return mapContextImpl.getOutputFormatClass();
-		}
+        @Override
+        public Class<? extends Reducer<?, ?, ?, ?>> getCombinerClass() throws ClassNotFoundException {
+            return mapContextImpl.getCombinerClass();
+        }
 
-		@Override
-		public Class<? extends Partitioner<?, ?>> getPartitionerClass() throws ClassNotFoundException {
-			return mapContextImpl.getPartitionerClass();
-		}
+        @Override
+        public Class<? extends Reducer<?, ?, ?, ?>> getReducerClass() throws ClassNotFoundException {
+            return mapContextImpl.getReducerClass();
+        }
 
-		@Override
-		public RawComparator<?> getSortComparator() {
-			return mapContextImpl.getSortComparator();
-		}
+        @Override
+        public Class<? extends OutputFormat<?, ?>> getOutputFormatClass() throws ClassNotFoundException {
+            return mapContextImpl.getOutputFormatClass();
+        }
 
-		@Override
-		public String getJar() {
-			return mapContextImpl.getJar();
-		}
+        @Override
+        public Class<? extends Partitioner<?, ?>> getPartitionerClass() throws ClassNotFoundException {
+            return mapContextImpl.getPartitionerClass();
+        }
 
-		@Override
-		public RawComparator<?> getGroupingComparator() {
-			return mapContextImpl.getGroupingComparator();
-		}
+        @Override
+        public RawComparator<?> getSortComparator() {
+            return mapContextImpl.getSortComparator();
+        }
 
-		@Override
-		public boolean getJobSetupCleanupNeeded() {
-			return mapContextImpl.getJobSetupCleanupNeeded();
-		}
+        @Override
+        public String getJar() {
+            return mapContextImpl.getJar();
+        }
 
-		@Override
-		public boolean getTaskCleanupNeeded() {
-			return mapContextImpl.getTaskCleanupNeeded();
-		}
+        @Override
+        public RawComparator<?> getGroupingComparator() {
+            return mapContextImpl.getGroupingComparator();
+        }
 
-		@Override
-		public boolean getProfileEnabled() {
-			return mapContextImpl.getProfileEnabled();
-		}
+        @Override
+        public boolean getJobSetupCleanupNeeded() {
+            return mapContextImpl.getJobSetupCleanupNeeded();
+        }
 
-		@Override
-		public String getProfileParams() {
-			return mapContextImpl.getProfileParams();
-		}
+        @Override
+        public boolean getTaskCleanupNeeded() {
+            return mapContextImpl.getTaskCleanupNeeded();
+        }
 
-		@Override
-		public Configuration.IntegerRanges getProfileTaskRange(boolean isMap) {
-			return mapContextImpl.getProfileTaskRange(isMap);
-		}
+        @Override
+        public boolean getProfileEnabled() {
+            return mapContextImpl.getProfileEnabled();
+        }
 
-		@Override
-		public String getUser() {
-			return mapContextImpl.getUser();
-		}
+        @Override
+        public String getProfileParams() {
+            return mapContextImpl.getProfileParams();
+        }
 
-		@Override
-		public boolean getSymlink() {
-			return mapContextImpl.getSymlink();
-		}
+        @Override
+        public Configuration.IntegerRanges getProfileTaskRange(boolean isMap) {
+            return mapContextImpl.getProfileTaskRange(isMap);
+        }
 
-		@Override
-		public Path[] getArchiveClassPaths() {
-			return mapContextImpl.getArchiveClassPaths();
-		}
+        @Override
+        public String getUser() {
+            return mapContextImpl.getUser();
+        }
 
-		@Override
-		public URI[] getCacheArchives() throws IOException {
-			return mapContextImpl.getCacheArchives();
-		}
+        @Override
+        public boolean getSymlink() {
+            return mapContextImpl.getSymlink();
+        }
 
-		@Override
-		public URI[] getCacheFiles() throws IOException {
-			return mapContextImpl.getCacheFiles();
-		}
+        @Override
+        public Path[] getArchiveClassPaths() {
+            return mapContextImpl.getArchiveClassPaths();
+        }
 
-		@Override
-		public Path[] getLocalCacheArchives() throws IOException {
-			return mapContextImpl.getLocalCacheArchives();
-		}
+        @Override
+        public URI[] getCacheArchives() throws IOException {
+            return mapContextImpl.getCacheArchives();
+        }
 
-		@Override
-		public Path[] getLocalCacheFiles() throws IOException {
-			return mapContextImpl.getLocalCacheFiles();
-		}
+        @Override
+        public URI[] getCacheFiles() throws IOException {
+            return mapContextImpl.getCacheFiles();
+        }
 
-		@Override
-		public Path[] getFileClassPaths() {
-			return mapContextImpl.getFileClassPaths();
-		}
+        @Override
+        public Path[] getLocalCacheArchives() throws IOException {
+            return mapContextImpl.getLocalCacheArchives();
+        }
 
-		@Override
-		public String[] getArchiveTimestamps() {
-			return mapContextImpl.getArchiveTimestamps();
-		}
+        @Override
+        public Path[] getLocalCacheFiles() throws IOException {
+            return mapContextImpl.getLocalCacheFiles();
+        }
 
-		@Override
-		public String[] getFileTimestamps() {
-			return mapContextImpl.getFileTimestamps();
-		}
+        @Override
+        public Path[] getFileClassPaths() {
+            return mapContextImpl.getFileClassPaths();
+        }
 
-		@Override
-		public int getMaxMapAttempts() {
-			return mapContextImpl.getMaxMapAttempts();
-		}
+        @Override
+        public String[] getArchiveTimestamps() {
+            return mapContextImpl.getArchiveTimestamps();
+        }
 
-		@Override
-		public int getMaxReduceAttempts() {
-			return mapContextImpl.getMaxReduceAttempts();
-		}
+        @Override
+        public String[] getFileTimestamps() {
+            return mapContextImpl.getFileTimestamps();
+        }
 
-		@Override
-		public void progress() {
-			mapContextImpl.progress();
-		}
+        @Override
+        public int getMaxMapAttempts() {
+            return mapContextImpl.getMaxMapAttempts();
+        }
 
-	
-	}
+        @Override
+        public int getMaxReduceAttempts() {
+            return mapContextImpl.getMaxReduceAttempts();
+        }
+
+        @Override
+        public void progress() {
+            mapContextImpl.progress();
+        }
+
+    
+    }
 }
