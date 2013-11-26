@@ -8,7 +8,7 @@
     </parent>
     <groupId>com.thinkaurelius.faunus</groupId>
     <artifactId>faunus</artifactId>
-    <version>0.4.1-Lab41</version>
+    <version>0.4.1-Lab41-SNAPSHOT</version>
     <packaging>jar</packaging>
     <url>http://thinkaurelius.github.com/faunus/</url>
     <name>Faunus: Graph Analytics Engine</name>
@@ -20,7 +20,7 @@
         <tinkerpop.version>2.4.0</tinkerpop.version>
         <hadoop.version>2.0.0-cdh4.4.0</hadoop.version>
         <hbase.version>0.94.6-cdh4.4.0</hbase.version>
-        <titan.version>0.4.1-Lab41</titan.version>
+        <titan.version>0.4.1-Lab41-SNAPSHOT</titan.version>
         <slf4j.version>1.7.5</slf4j.version>
     </properties>
     <developers>
