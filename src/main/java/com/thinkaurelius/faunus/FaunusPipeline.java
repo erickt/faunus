@@ -3,6 +3,7 @@ package com.thinkaurelius.faunus;
 import com.thinkaurelius.faunus.formats.EdgeCopyMapReduce;
 import com.thinkaurelius.faunus.formats.MapReduceFormat;
 import com.thinkaurelius.faunus.mapreduce.FaunusCompiler;
+import com.thinkaurelius.faunus.mapreduce.FaunusTool;
 import com.thinkaurelius.faunus.mapreduce.IdentityMap;
 import com.thinkaurelius.faunus.mapreduce.filter.BackFilterMapReduce;
 import com.thinkaurelius.faunus.mapreduce.filter.CyclicPathFilterMap;
@@ -44,11 +45,13 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ToolRunner;
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -1034,7 +1037,7 @@ public class FaunusPipeline {
         return this.stringRepresentation.toString();
     }
 
-    private FaunusPipeline done() {
+    public FaunusPipeline done() throws Exception {
         if (!this.state.isLocked()) {
             final Pair<String, Class<? extends WritableComparable>> pair = this.state.popProperty();
             if (null != pair) {
@@ -1046,6 +1049,15 @@ public class FaunusPipeline {
                 this.state.lock();
             }
         }
+
+        if (MapReduceFormat.class.isAssignableFrom(this.graph.getGraphOutputFormat())) {
+            this.state.assertNotLocked();
+            ((Class<? extends MapReduceFormat>) this.graph.getGraphOutputFormat()).getConstructor().newInstance().addMapReduceJobs(this.compiler);
+        }
+
+        this.compiler.completeSequence();
+        this.compiler.composeJobs();
+
         return this;
     }
 
@@ -1067,12 +1079,10 @@ public class FaunusPipeline {
      */
     public void submit(final String script, final Boolean showHeader) throws Exception {
         this.done();
-        if (MapReduceFormat.class.isAssignableFrom(this.graph.getGraphOutputFormat())) {
-            this.state.assertNotLocked();
-            ((Class<? extends MapReduceFormat>) this.graph.getGraphOutputFormat()).getConstructor().newInstance().addMapReduceJobs(this.compiler);
-        }
-        this.compiler.completeSequence();
-        ToolRunner.run(this.compiler, new String[]{script, showHeader.toString()});
+
+        FaunusTool faunusTool = new FaunusTool(this.graph, this.compiler.getJobs());
+
+        ToolRunner.run(faunusTool, new String[]{script, showHeader.toString()});
     }
 
     /**

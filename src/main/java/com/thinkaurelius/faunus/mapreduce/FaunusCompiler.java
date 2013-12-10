@@ -33,6 +33,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -279,6 +280,10 @@ public class FaunusCompiler extends Configured implements Tool {
         }
     }
 
+    public List<Job> getJobs() {
+        return this.jobs;
+    }
+
     public int run(final String[] args) throws Exception {
         String script = null;
         boolean showHeader = true;
@@ -286,11 +291,6 @@ public class FaunusCompiler extends Configured implements Tool {
         if (args.length == 2) {
             script = args[0];
             showHeader = Boolean.valueOf(args[1]);
-        }
-
-        final FileSystem hdfs = FileSystem.get(this.getConf());
-        if (this.graph.getOutputLocationOverwrite() && hdfs.exists(this.graph.getOutputLocation())) {
-            hdfs.delete(this.graph.getOutputLocation(), true);
         }
 
         if (showHeader) {
@@ -309,37 +309,20 @@ public class FaunusCompiler extends Configured implements Tool {
             logger.info("          |/");
         }
 
-        if (null != script && !script.isEmpty())
+        if (null != script && !script.isEmpty()) {
             logger.info("Generating job chain: " + script);
+        }
 
         this.composeJobs();
         logger.info("Compiled to " + this.jobs.size() + " MapReduce job(s)");
-        final String jobPath = this.graph.getOutputLocation().toString() + "/" + Tokens.JOB;
-        for (int i = 0; i < this.jobs.size(); i++) {
-            final Job job = this.jobs.get(i);
-            try {
-                ((JobConfigurationFormat) (FormatTools.getBaseOutputFormatClass(job).newInstance())).updateJob(job);
-            } catch (final Exception e) {
-            }
-            logger.info("Executing job " + (i + 1) + " out of " + this.jobs.size() + ": " + job.getJobName());
-            logger.info("Job data location: " + jobPath + "-" + i);
-            boolean success = job.waitForCompletion(true);
-            if (i > 0) {
-                final Path path = new Path(jobPath + "-" + (i - 1));
-                // delete previous intermediate graph data
-                for (final FileStatus temp : hdfs.globStatus(new Path(path.toString() + "/" + Tokens.GRAPH + "*"))) {
-                    hdfs.delete(temp.getPath(), true);
-                }
-                // delete previous intermediate graph data
-                for (final FileStatus temp : hdfs.globStatus(new Path(path.toString() + "/" + Tokens.PART + "*"))) {
-                    hdfs.delete(temp.getPath(), true);
-                }
-            }
-            if (!success) {
-                logger.error("Faunus job error -- remaining MapReduce jobs have been canceled");
-                return -1;
-            }
+
+        FaunusJobControl faunusJobControl = new FaunusJobControl(graph, jobs);
+        faunusJobControl.run();
+
+        if (faunusJobControl.getFailedJobs().size() == 0) {
+            return 0;
+        } else {
+            return -1;
         }
-        return 0;
     }
 }
