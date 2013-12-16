@@ -104,6 +104,11 @@
         </dependency>
         <dependency>
             <groupId>com.thinkaurelius.titan</groupId>
+            <artifactId>titan-es</artifactId>
+            <version>${titan.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.thinkaurelius.titan</groupId>
             <artifactId>titan-cassandra</artifactId>
             <version>${titan.version}</version>
         </dependency>
