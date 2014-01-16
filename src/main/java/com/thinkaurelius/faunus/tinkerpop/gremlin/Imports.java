@@ -36,6 +36,7 @@ public class Imports {
         // faunus
         imports.add("com.thinkaurelius.faunus.*");
         imports.add("com.thinkaurelius.faunus.formats.*");
+        imports.add("com.thinkaurelius.faunus.formats.adjacency.*");
         imports.add("com.thinkaurelius.faunus.formats.edgelist.*");
         imports.add("com.thinkaurelius.faunus.formats.edgelist.rdf.*");
         imports.add("com.thinkaurelius.faunus.formats.graphson.*");
