@@ -191,11 +191,6 @@ public class MemoryMapper<A, B, C, D> extends Mapper<A, B, C, D> {
         }
 
         @Override
-        public boolean userClassesTakesPrecedence() {
-            return false;
-        }
-
-        @Override
         public Class<? extends InputFormat<?, ?>> getInputFormatClass() throws ClassNotFoundException {
             return mapContextImpl.getInputFormatClass();
         }
