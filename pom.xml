@@ -8,7 +8,7 @@
     </parent>
     <groupId>com.thinkaurelius.faunus</groupId>
     <artifactId>faunus</artifactId>
-    <version>0.4.2</version>
+    <version>0.4.2-CDH5-SNAPSHOT</version>
     <packaging>jar</packaging>
     <url>http://thinkaurelius.github.com/faunus/</url>
     <name>Faunus: Graph Analytics Engine</name>
@@ -18,7 +18,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sesame.version>2.6.10</sesame.version>
         <tinkerpop.version>2.4.0</tinkerpop.version>
-        <titan.version>0.4.2</titan.version>
+        <hadoop.version>2.2.0</hadoop.version>
+        <hbase.version>0.96.1.1</hbase.version>
+        <titan.version>0.4.2-CDH5-SNAPSHOT</titan.version>
         <slf4j.version>1.7.5</slf4j.version>
     </properties>
     <developers>
@@ -90,8 +92,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-            <version>1.2.1</version>
+            <artifactId>hadoop-client</artifactId>
+            <version>${hadoop.version}</version>
             <scope>provided</scope>
         </dependency>
         <!-- TITAN -->
@@ -102,17 +104,17 @@
         </dependency>
         <dependency>
             <groupId>com.thinkaurelius.titan</groupId>
+            <artifactId>titan-es</artifactId>
+            <version>${titan.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.thinkaurelius.titan</groupId>
             <artifactId>titan-cassandra</artifactId>
             <version>${titan.version}</version>
         </dependency>
         <dependency>
             <groupId>com.thinkaurelius.titan</groupId>
             <artifactId>titan-hbase</artifactId>
-            <version>${titan.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.thinkaurelius.titan</groupId>
-            <artifactId>titan-es</artifactId>
             <version>${titan.version}</version>
         </dependency>
         <!-- RDF PARSING -->
@@ -162,8 +164,8 @@
         <dependency>
             <groupId>org.apache.mrunit</groupId>
             <artifactId>mrunit</artifactId>
-            <version>0.9.0-incubating</version>
-            <classifier>hadoop1</classifier>
+            <version>1.0.0</version>
+            <classifier>hadoop2</classifier>
             <scope>test</scope>
         </dependency>
     </dependencies>
