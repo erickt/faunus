@@ -10,6 +10,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ public class AdjacencyListRecordReaderTest {
                 0,
                 Long.MAX_VALUE,
                 new String[]{});
-        TaskAttemptContext context = new TaskAttemptContext(new Configuration(), new TaskAttemptID());
+        TaskAttemptContext context = new TaskAttemptContextImpl(new Configuration(), new TaskAttemptID());
         AdjacencyListRecordReader reader = new AdjacencyListRecordReader(
                 VertexQueryFilter.create(new EmptyConfiguration()),
                 LABEL);
