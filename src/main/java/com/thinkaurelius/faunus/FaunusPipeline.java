@@ -1055,7 +1055,6 @@ public class FaunusPipeline {
             ((Class<? extends MapReduceFormat>) this.graph.getGraphOutputFormat()).getConstructor().newInstance().addMapReduceJobs(this.compiler);
         }
 
-        this.compiler.completeSequence();
         this.compiler.composeJobs();
 
         return this;

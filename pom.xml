@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.sonatype.oss</groupId>
@@ -20,6 +21,7 @@
         <tinkerpop.version>2.4.0</tinkerpop.version>
         <titan.version>0.4.2-dendrite-hadoop1-SNAPSHOT</titan.version>
         <slf4j.version>1.7.5</slf4j.version>
+        <hadoop.version>2.2.0</hadoop.version>
     </properties>
     <developers>
         <developer>
@@ -90,9 +92,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-            <version>1.2.1</version>
-            <scope>provided</scope>
+            <artifactId>hadoop-client</artifactId>
+            <version>${hadoop.version}</version>
         </dependency>
         <!-- TITAN -->
         <dependency>
@@ -162,8 +163,8 @@
         <dependency>
             <groupId>org.apache.mrunit</groupId>
             <artifactId>mrunit</artifactId>
-            <version>0.9.0-incubating</version>
-            <classifier>hadoop1</classifier>
+            <version>1.0.0</version>
+            <classifier>hadoop2</classifier>
             <scope>test</scope>
         </dependency>
     </dependencies>

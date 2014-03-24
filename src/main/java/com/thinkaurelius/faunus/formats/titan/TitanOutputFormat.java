@@ -49,9 +49,9 @@ public abstract class TitanOutputFormat extends NoOpOutputFormat implements MapR
         try {
             final Configuration configuration = job.getConfiguration();
             if (FileInputFormat.class.isAssignableFrom(job.getInputFormatClass())) {
-                final Long splitSize = configuration.getLong("mapred.max.split.size", -1);
+                final Long splitSize = configuration.getLong("mapreduce.input.fileinputformat.split.maxsize", -1);
                 if (splitSize == -1)
-                    throw new InterruptedException("Can not determine the number of reduce tasks if mapred.max.split.size is not set");
+                    throw new InterruptedException("Can not determine the number of reduce tasks if mapreduce.input.fileinputformat.split.maxsize is not set");
                 final Path[] paths = FileInputFormat.getInputPaths(job);
                 final PathFilter filter = FileInputFormat.getInputPathFilter(job);
                 final FileSystem fs = FileSystem.get(configuration);
@@ -62,8 +62,8 @@ public abstract class TitanOutputFormat extends NoOpOutputFormat implements MapR
                 final int reduceTasks = (int) (totalSize.doubleValue() / splitSize.doubleValue());
                 job.setNumReduceTasks((reduceTasks == 0) ? 1 : reduceTasks);
             } else {
-                if (-1 == configuration.getInt("mapred.reduce.tasks", -1)) {
-                    throw new InterruptedException("The input to Titan is not in HDFS and source size can not be determined -- set mapred.reduce.tasks");
+                if (-1 == configuration.getInt("mapreduce.job.reduces", -1)) {
+                    throw new InterruptedException("The input to Titan is not in HDFS and source size can not be determined -- set mapreduce.job.reduces");
                 }
             }
         } catch (final ClassNotFoundException e) {
