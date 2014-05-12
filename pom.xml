@@ -9,7 +9,7 @@
     </parent>
     <groupId>com.thinkaurelius.faunus</groupId>
     <artifactId>faunus</artifactId>
-    <version>0.4.2</version>
+    <version>0.4.4</version>
     <packaging>jar</packaging>
     <url>http://thinkaurelius.github.com/faunus/</url>
     <name>Faunus: Graph Analytics Engine</name>
@@ -19,7 +19,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sesame.version>2.6.10</sesame.version>
         <tinkerpop.version>2.4.0</tinkerpop.version>
-        <titan.version>0.4.2</titan.version>
+        <titan.version>0.4.4</titan.version>
         <slf4j.version>1.7.5</slf4j.version>
         <hadoop.version>2.2.0</hadoop.version>
     </properties>
@@ -53,7 +53,7 @@
         <connection>scm:git:git@github.com:thinkaurelius/faunus.git</connection>
         <developerConnection>scm:git:git@github.com:thinkaurelius/faunus.git</developerConnection>
         <url>git@github.com:thinkaurelius/faunus.git</url>
-      <tag>0.4.2</tag>
+      <tag>0.4.4</tag>
   </scm>
     <dependencyManagement>
         <dependencies>
@@ -168,13 +168,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <repositories>
-        <repository>
-            <id>aduna-repo</id>
-            <name>Aduna repository</name>
-            <url>http://repo.aduna-software.org/maven2/releases</url>
-        </repository>
-    </repositories>
     <build>
         <!-- Used during release:perform to upload to S3 -->
         <extensions>
@@ -308,7 +301,14 @@
             </plugin>
             <plugin>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>2.4.1</version>
+                <version>2.5</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.scm</groupId>
+                        <artifactId>maven-scm-provider-gitexe</artifactId>
+                        <version>1.9</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <goals>deploy</goals>
                     <pushChanges>false</pushChanges>
@@ -367,6 +367,33 @@
                                             <filtering>false</filtering>
                                         </resource>
                                     </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!--
+                       The distribution descriptor includes files written to the build
+                       directory by both the standalone and hadoop-job descriptors.
+                       That's why the execution for the distribution descriptor comes last.
+                    -->
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.4</version>
+                        <executions>
+                            <execution>
+                                <id>assemble-zip-and-tar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <attach>false</attach>
+                                    <finalName>${project.artifactId}</finalName>
+                                    <tarLongFileMode>gnu</tarLongFileMode>
+                                    <descriptors>
+                                        <descriptor>src/assembly/distribution.xml</descriptor>
+                                    </descriptors>
                                 </configuration>
                             </execution>
                         </executions>
@@ -440,33 +467,43 @@
                                     <workingDirectory>${project.basedir}</workingDirectory>
                                 </configuration>
                             </execution>
-                        </executions>
-                    </plugin>
-
-                    <!--
-                       The distribution descriptor includes files written to the build
-                       directory by both the standalone and hadoop-job descriptors.
-                       That's why the execution for the distribution descriptor comes last.
-                    -->
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.4</version>
-                        <executions>
+                            <!-- GPG plugin can't sign a file.  It can only either:
+                                 * sign all artifacts attached to the project or
+                                 * sign and deploy a file
+                            -->
                             <execution>
-                                <id>build-attached-assemblies</id>
+                                <id>sign-zip</id>
                                 <phase>package</phase>
                                 <goals>
-                                    <goal>single</goal>
+                                    <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <attach>true</attach>
-                                    <finalName>${project.artifactId}</finalName>
-                                    <tarLongFileMode>gnu</tarLongFileMode>
-                                    <descriptors>
-                                        <descriptor>src/assembly/distribution.xml</descriptor>
-                                    </descriptors>
+                                    <executable>gpg</executable>
+                                    <arguments>
+                                        <argument>--detach-sign</argument>
+                                        <argument>--armor</argument>
+                                        <argument>${project.artifactId}-${project.version}.zip</argument>
+                                    </arguments>
+                                    <workingDirectory>${project.build.directory}</workingDirectory>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>sign-tar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>gpg</executable>
+                                    <arguments>
+                                        <argument>--detach-sign</argument>
+                                        <argument>--armor</argument>
+                                        <argument>${project.artifactId}-${project.version}.tar.bz2</argument>
+                                    </arguments>
+                                    <workingDirectory>${project.build.directory}</workingDirectory>
+                                </configuration>
+                            </execution>
+
                         </executions>
                     </plugin>
 
