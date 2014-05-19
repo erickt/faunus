@@ -168,6 +168,14 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <repositories>
+        <repository>
+            <id>aduna-repo</id>
+            <name>Aduna repository</name>
+            <!-- Aduna repo is down -->
+            <url>http://repo.maven.apache.org/maven2/releases</url>
+        </repository>
+    </repositories>
     <build>
         <!-- Used during release:perform to upload to S3 -->
         <extensions>
